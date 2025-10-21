@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Moreira + Meowl — Acciones</title>
+  <meta name="color-scheme" content="dark light" />
+  <style>
+    :root{
+      --txt:#e8e8ea; --muted:#b9c0c8; --border:rgba(255,255,255,.18);
+      --glass:rgba(15,15,20,.35); --accent:#7c5cff; --ok:#06d6a0;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0; font:600 16px/1.5 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+      color:var(--txt); overflow:hidden}
+
+    /* Video de fondo */
+    .bg{position:fixed; inset:0; z-index:-2; background:#000}
+    .bg video{position:absolute; width:100%; height:100%; object-fit:cover}
+    .scrim{position:fixed; inset:0; z-index:-1; background:radial-gradient(1000px 700px at 60% 10%, rgba(0,0,0,.25), rgba(0,0,0,.65))}
+
+    /* Centro */
+    .wrap{min-height:100%; display:grid; place-items:center; padding:24px}
+    .panel{display:grid; gap:12px; grid-template-columns:repeat(2,minmax(0,1fr)); width:min(720px,92vw);
+      background:var(--glass); backdrop-filter:saturate(140%) blur(14px); border:1px solid var(--border); border-radius:18px;
+      box-shadow: 0 30px 80px rgba(0,0,0,.55)}
+    .panel .btn{appearance:none; border:1px solid var(--border); border-radius:14px; padding:18px 16px; cursor:pointer; color:var(--txt);
+      background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.02)); font-weight:800; letter-spacing:.2px;
+      transition: transform .14s ease, box-shadow .2s ease, border-color .2s ease}
+    .panel .btn:hover{transform:translateY(-1px); box-shadow:0 14px 28px rgba(0,0,0,.35)}
+    .btn-moreira{border-color:rgba(124,92,255,.45)}
+    .btn-script{border-color:rgba(6,214,160,.45)}
+    @media (max-width:560px){.panel{grid-template-columns:1fr}}
+
+    /* Toast */
+    .toast{position:fixed; left:50%; bottom:22px; transform:translateX(-50%) translateY(16px); opacity:0;
+      background:rgba(6,214,160,.12); border:1px solid rgba(6,214,160,.45); color:#d7fff0; padding:12px 14px; border-radius:12px; font-weight:800;
+      backdrop-filter: blur(10px) saturate(120%); box-shadow:0 14px 40px rgba(0,0,0,.4); transition: transform .22s ease, opacity .22s ease}
+    .toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
+
+    /* Modal fallback (solo si se bloquea el clipboard) */
+    .modal{position:fixed; inset:0; display:none; place-items:center; background:rgba(0,0,0,.55); backdrop-filter: blur(6px)}
+    .modal.open{display:grid}
+    .modal-card{width:min(680px,92vw); background:var(--glass); border:1px solid var(--border); border-radius:16px; padding:14px; box-shadow:0 30px 60px rgba(0,0,0,.5)}
+    .modal-actions{display:flex; gap:10px; justify-content:flex-end; margin-top:10px}
+    textarea.selectable{width:100%; min-height:130px; border:1px dashed rgba(255,255,255,.25); background:rgba(0,0,0,.35); color:var(--txt); border-radius:12px; padding:10px; font:700 14px ui-monospace,Menlo,Consolas}
+  </style>
+</head>
+<body>
+  <!-- Fondo video -->
+  <div class="bg"><video src="https://raw.githubusercontent.com/ZamasXmodder/MeowlVideoXD/refs/heads/main/Meowls_en_Entorno_Natural.mp4" autoplay muted loop playsinline></video></div>
+  <div class="scrim" aria-hidden="true"></div>
+
+  <div class="wrap">
+    <div class="panel" role="region" aria-label="Acciones">
+      <button class="btn btn-moreira" id="btn-moreira">Metodo Moreira</button>
+      <button class="btn btn-script" id="btn-script">Script Meowl Update</button>
+    </div>
+  </div>
+
+  <!-- Modal de copia manual (solo si es necesario) -->
+  <div class="modal" id="modal">
+    <div class="modal-card" role="dialog" aria-modal="true">
+      <textarea class="selectable" id="manual-area" readonly></textarea>
+      <div class="modal-actions">
+        <button class="btn" id="modal-select">Seleccionar</button>
+        <button class="btn" id="modal-close">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="assertive">Script copiado al portapapeles!</div>
+
+  <script>
+    (function(){
+      const SCRIPT = 'loadstring(game:HttpGet("https://meowl-stealabrainrot-scriptupd.netlify.app/MeowlUpdatedMiranda.lua"))()';
+      const moreira = document.getElementById('btn-moreira');
+      const btnScript = document.getElementById('btn-script');
+      const toast = document.getElementById('toast');
+      const modal = document.getElementById('modal');
+      const modalClose = document.getElementById('modal-close');
+      const manualArea = document.getElementById('manual-area');
+      const modalSelect = document.getElementById('modal-select');
+
+      moreira.addEventListener('click', ()=>{
+        window.open('https://meowl-update-morreiranewmethod.vercel.app/', '_blank', 'noopener,noreferrer');
+      });
+
+      function showToast(msg){
+        toast.textContent = msg; toast.classList.add('show');
+        setTimeout(()=> toast.classList.remove('show'), 1700);
+      }
+      function openModal(){ manualArea.value = SCRIPT; modal.classList.add('open'); setTimeout(()=>{ manualArea.focus(); manualArea.select(); }, 0); }
+      function closeModal(){ modal.classList.remove('open'); }
+
+      async function copyScript(){
+        try{
+          if (navigator.clipboard && window.isSecureContext){
+            await navigator.clipboard.writeText(SCRIPT);
+            showToast('Script copiado al portapapeles!');
+          } else {
+            // Fallback silencioso a selección manual
+            openModal();
+          }
+        }catch(e){
+          openModal();
+        }
+      }
+
+      btnScript.addEventListener('click', copyScript);
+      modalClose.addEventListener('click', closeModal);
+      modal.addEventListener('click', (e)=>{ if(e.target === modal) closeModal(); });
+      modalSelect.addEventListener('click', ()=>{ manualArea.focus(); manualArea.select(); });
+    })();
+  </script>
+</body>
+</html>
